@@ -41,7 +41,7 @@ javac --release 17 \
     -d build/classes \
     $(find src/main/java -name '*.java')
 
-OUT="build/railways_curvefix-$VER.jar"
+OUT="build/railways-curvefix-$VER.jar"
 
 jar --create \
     --file "$OUT" \
