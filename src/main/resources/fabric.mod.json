@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "railways-curvefix",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Create: Curve Casing Fix",
   "description": "Flat curved tracks get the same slab casing as straight tracks instead of 3px panels.",
   "authors": ["rebootless"],

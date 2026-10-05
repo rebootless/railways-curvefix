@@ -14,6 +14,7 @@ import com.simibubi.create.content.trains.track.BezierConnection;
 import com.simibubi.create.content.trains.track.TrackBlockEntity;
 import com.simibubi.create.content.trains.track.TrackInstance;
 import io.github.rebootless.curvefix.CurveCasing;
+import io.github.rebootless.curvefix.CurveRules;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.class_1920;
@@ -48,7 +49,7 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
             at = @At(value = "INVOKE", target = "Lcom/railwayteam/railways/mixin_interfaces/IHasTrackCasing;getTrackCasing()Lnet/minecraft/class_2482;"),
             require = 0)
     private class_2482 curvefix$hideFlatCurve(IHasTrackCasing self) {
-        if (self instanceof BezierConnection && CurveCasing.flat((BezierConnection) self)) return null;
+        if (self instanceof BezierConnection && CurveRules.flat((BezierConnection) self)) return null;
         return self.getTrackCasing();
     }
 
@@ -59,7 +60,7 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
         class_4587 ms = new class_4587();
         ((TransformStack) TransformStack.cast(ms).translate((class_2382) this.getInstancePosition())).nudge((int) this.pos.method_10063());
         for (BezierConnection bc : this.blockEntity.getConnections().values()) {
-            if (!bc.isPrimary() || !CurveCasing.flat(bc)) continue;
+            if (!bc.isPrimary() || !CurveRules.flat(bc)) continue;
             class_2482 casing = ((IHasTrackCasing) bc).getTrackCasing();
             PartialModel raw = CurveCasing.rawModel(bc);
             if (casing == null || raw == null) continue;
@@ -68,9 +69,9 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
             for (int i = 1; i < segments.length; i += CurveCasing.STEP) {
                 BezierConnection.SegmentAngles segment = segments[i];
                 Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
-                pose.translate((Vector3fc) new Vector3f(0.0f, CurveCasing.yOffset(i), 0.0f));
+                pose.translate((Vector3fc) new Vector3f(0.0f, CurveCasing.yOffset(i), CurveCasing.zShift(bc, i, count)));
                 ModelData inst = CasingRenderUtils.makeCasingInstance(raw, casing, mat);
-                inst.setTransform(ms).mulPose(pose).mulNormal(segment.tieTransform.method_23762()).scale(1.001f, 1.001f, CurveCasing.zScale(bc, i, count));
+                inst.setTransform(ms).mulPose(pose).mulNormal(segment.tieTransform.method_23762());
                 class_2338 rel = segment.lightPosition.method_10081((class_2382) this.pos);
                 inst.updateLight((class_1920) this.world, rel);
                 this.curvefix$models.add(inst);

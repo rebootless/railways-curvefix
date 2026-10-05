@@ -3,7 +3,6 @@ package io.github.rebootless.curvefix;
 import com.jozufozu.flywheel.core.PartialModel;
 import com.jozufozu.flywheel.util.transform.TransformStack;
 import com.railwayteam.railways.content.custom_tracks.casing.CasingRenderUtils;
-import com.railwayteam.railways.mixin_interfaces.IHasTrackCasing;
 import com.railwayteam.railways.registry.CRBlockPartials;
 import com.railwayteam.railways.util.MathUtils;
 import com.simibubi.create.content.trains.track.BezierConnection;
@@ -24,34 +23,34 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 /**
- * Flat (no height difference) curves with the default (non-alternate) casing are drawn with the
- * straight-track slab model (ZO) placed along every curve segment, instead of 3px panels.
+ * Client side. Flat curves with the default casing are drawn with the straight-track slab model (ZO),
+ * one piece per curve segment, 1:1 (no scaling, so textures stay pixel-perfect).
  */
 public final class CurveCasing {
     private CurveCasing() {}
 
-    /** Place a piece on every STEP-th segment (a segment is ~0.5 block). -Dcurvefix.step=N */
-    public static final int STEP = Math.max(1, Integer.getInteger("curvefix.step", 2));
-    /** How many pixels (1/16 block) to sink the casing relative to the track base. -Dcurvefix.drop=px */
-    public static final float DROP = Float.parseFloat(System.getProperty("curvefix.drop", "1")) / 16.0f;
-    /** Piece length multiplier; slightly >1 hides hairline seams. -Dcurvefix.overlap=f */
-    public static final float OVERLAP = Float.parseFloat(System.getProperty("curvefix.overlap", "1.01"));
+    /** One piece per STEP segments (a segment is ~0.5 block). -Dcurvefix.step=N */
+    public static final int STEP = Math.max(1, Integer.getInteger("curvefix.step", 1));
+    /**
+     * Pixels (1/16 block) the pieces are sunk. The curve origin sits 15/16 px above the straight-track
+     * origin, so 0.9375 would put the slab top exactly level with straight casing; the default is
+     * 0.25 px higher than that. -Dcurvefix.drop=px
+     */
+    public static final float DROP = Float.parseFloat(System.getProperty("curvefix.drop", "0.6875")) / 16.0f;
+    /** Height difference (blocks) between alternating pieces; the lower layer fills seams without z-fighting. -Dcurvefix.layer=f */
+    public static final float LAYER = Float.parseFloat(System.getProperty("curvefix.layer", "0.001"));
 
-    /** Vertical offset: sunk by DROP, plus a tiny per-piece lift so neighbouring tops never z-fight. */
+    /** Every second piece sits one LAYER lower, so overlapping pieces never z-fight. */
     public static float yOffset(int i) {
-        return -DROP + (i % 4) * 0.001f;
+        return -DROP + ((i & 1) == 0 ? 0.0f : LAYER);
     }
 
-    /** Pieces are stretched along the curve so consecutive pieces meet without gaps or overlap. */
-    public static float zScale(BezierConnection bc, int i, int count) {
-        int span = Math.min(STEP, count - i + 1);
-        return (float) (bc.getLength() / count * span * OVERLAP);
-    }
-
-    public static boolean flat(BezierConnection bc) {
-        if (((IHasTrackCasing) bc).isAlternate()) return false;
-        int h = Math.abs(bc.tePositions.getFirst().method_10264() - bc.tePositions.getSecond().method_10264());
-        return h == 0;
+    /** Pieces are 1 block long; the last one is pulled back so it ends exactly at the end of the curve. */
+    public static float zShift(BezierConnection bc, int i, int count) {
+        double length = bc.getLength();
+        if (length < 1.0) return 0.0f;
+        double start = (i - 1) * (length / count);
+        return (float) Math.min(0.0, (length - 1.0) - start);
     }
 
     /** Straight-track slab model for this curve's track type, or null. */
@@ -76,8 +75,8 @@ public final class CurveCasing {
             BezierConnection.SegmentAngles segment = segments[i];
             int light = class_761.method_23794((class_1920) level, (class_2338) segment.lightPosition.method_10081((class_2382) tePosition));
             Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
-            pose.translate((Vector3fc) new Vector3f(0.0f, yOffset(i), 0.0f));
-            ((SuperByteBuffer) CachedBufferer.partial(model, state).mulPose(pose).mulNormal(segment.tieTransform.method_23762()).scale(1.001f, 1.001f, zScale(bc, i, count))).light(light).renderInto(ms, vb);
+            pose.translate((Vector3fc) new Vector3f(0.0f, yOffset(i), zShift(bc, i, count)));
+            ((SuperByteBuffer) CachedBufferer.partial(model, state).mulPose(pose).mulNormal(segment.tieTransform.method_23762())).light(light).renderInto(ms, vb);
         }
         ms.method_22909();
         return true;

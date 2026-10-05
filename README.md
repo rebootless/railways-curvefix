@@ -2,11 +2,6 @@
 
 Flat curved tracks normally use thin 3px panels for their casing, which makes them visually inconsistent with straight cased tracks. This mod changes the casing of flat curved tracks to use the same slab-style casing as straight tracks, including the corresponding rail grooves.
 
-### What it changes
-* Replaces the thin 3px casing used by flat curved tracks
-* Uses the same slab-style casing as straight tracks
-* Preserves the existing rail grooves
-
 ### Known Issues
 The current implementation has some visual limitations on sharp curves:
 * **Gaps between segments** may be visible on sharp curves, where adjacent casing segments do not meet perfectly
