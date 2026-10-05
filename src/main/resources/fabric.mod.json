@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "railways_curvefix",
+  "version": "1.0.0",
+  "name": "Steam 'n' Rails: Curve Casing Fix",
+  "description": "Flat curved tracks get the same slab casing as straight tracks (slab with rail grooves) instead of 3px panels.",
+  "authors": ["rebootless"],
+  "contact": { "sources": "https://github.com/rebootless/railways-curvefix" },
+  "license": "MIT",
+  "environment": "client",
+  "mixins": [
+    { "config": "railways_curvefix.mixins.json", "environment": "client" }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.3",
+    "minecraft": "1.20.1",
+    "railways": ">=1.6.9",
+    "create": "*"
+  }
+}

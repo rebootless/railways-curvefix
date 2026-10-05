@@ -1,0 +1,1 @@
+package net.minecraft; public class class_2338 extends class_2382 { public long method_10063(){return 0;} public class_2338 method_10081(class_2382 v){return null;} public int method_10264(){return 0;} }

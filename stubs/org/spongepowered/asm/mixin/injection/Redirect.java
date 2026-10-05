@@ -1,0 +1,1 @@
+package org.spongepowered.asm.mixin.injection; import java.lang.annotation.*; @Retention(RetentionPolicy.RUNTIME) public @interface Redirect { String[] method() default {}; At at(); int require() default -1; }
