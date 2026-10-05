@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "railways_curvefix",
+  "id": "railways-curvefix",
   "version": "1.0.0",
-  "name": "Steam 'n' Rails: Curve Casing Fix",
-  "description": "Flat curved tracks get the same slab casing as straight tracks (slab with rail grooves) instead of 3px panels.",
+  "name": "Create: Curve Casing Fix",
+  "description": "Flat curved tracks get the same slab casing as straight tracks instead of 3px panels.",
   "authors": ["rebootless"],
   "contact": { "sources": "https://github.com/rebootless/railways-curvefix" },
   "license": "MIT",
