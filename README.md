@@ -31,7 +31,7 @@ Flat curves normally use thin 3px panels for their casing, which makes them look
 <p align="center">🚋 <i>Now you can make proper tram tracks!</i></p>
 
 > **⚠️ Known Issues**  
-> Narrow gauge tracks may still look incorrect on curves due to the curved track geometry.
+> Narrow gauge tracks may still look bad on curves.
 
 > **ℹ️ Important**  
 > This is a **client-side visual fix** and does not add new blocks, items, or gameplay mechanics.
