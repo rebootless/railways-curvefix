@@ -29,25 +29,69 @@ import org.joml.Vector3fc;
 public final class CurveCasing {
     private CurveCasing() {}
 
-    /** One piece per STEP segments (a segment is ~0.5 block). -Dcurvefix.step=N */
-    public static final int STEP = Math.max(1, Integer.getInteger("curvefix.step", 1));
     /**
-     * Pixels (1/16 block) the pieces are sunk. The curve origin sits 15/16 px above the straight-track
-     * origin, so 0.9375 would put the slab top exactly level with straight casing; the default is
-     * 0.25 px higher than that. -Dcurvefix.drop=px
+     * Height (px, 1/16 block) of the slab top above the straight-track casing top; 0 = flush.
+     * Default from build.sh; runtime override: -Dcurvefix.height=px
      */
-    public static final float DROP = Float.parseFloat(System.getProperty("curvefix.drop", "0.6875")) / 16.0f;
-    /** Height difference (blocks) between alternating pieces; the lower layer fills seams without z-fighting. -Dcurvefix.layer=f */
-    public static final float LAYER = Float.parseFloat(System.getProperty("curvefix.layer", "0.001"));
+    public static final float HEIGHT = Float.parseFloat(System.getProperty("curvefix.height", String.valueOf(Tunables.HEIGHT_PX)));
+    /** The curve origin sits 15/16 px above the straight-track origin, so pieces are sunk by 15/16 - HEIGHT. */
+    private static final float SINK = (0.9375f - HEIGHT) / 16.0f;
+    /** Height (blocks) of the main pieces above the lower, gap-filling pieces, which avoids z-fighting. -Dcurvefix.secondarylayer=f */
+    public static final float SECONDARY_LAYER = Float.parseFloat(System.getProperty("curvefix.secondarylayer", String.valueOf(Tunables.SECONDARY_LAYER)));
+    /** Extra height (blocks) of every second main piece over its neighbours, which avoids z-fighting between them. -Dcurvefix.layer=f */
+    public static final float LAYER = Float.parseFloat(System.getProperty("curvefix.layer", String.valueOf(Tunables.LAYER)));
 
-    /** Every second piece sits one LAYER lower, so overlapping pieces never z-fight. */
-    public static float yOffset(int i) {
-        return -DROP + ((i & 1) == 0 ? 0.0f : LAYER);
+    /** Width and length scale of the lower, gap-filling pieces (around the model center); 1 = full size. -Dcurvefix.secondaryscale=f */
+    public static final float SECONDARY_SCALE = Float.parseFloat(System.getProperty("curvefix.secondaryscale", String.valueOf(Tunables.SECONDARY_SCALE)));
+
+    /** Rotation (degrees) of the lower, gap-filling pieces around the vertical axis through their center; positive = clockwise from above. -Dcurvefix.secondaryrotation=deg */
+    public static final float SECONDARY_ROTATION = (float) Math.toRadians(Float.parseFloat(System.getProperty("curvefix.secondaryrotation", String.valueOf(Tunables.SECONDARY_ROTATION_DEG))));
+    /** Rotation (degrees) of the main pieces around the vertical axis through their center; positive = clockwise from above. -Dcurvefix.rotation=deg */
+    public static final float ROTATION = (float) Math.toRadians(Float.parseFloat(System.getProperty("curvefix.rotation", String.valueOf(Tunables.ROTATION_DEG))));
+
+    /** Center of the straight-track slab model (zo, zo_wide, zo_narrow) in width and length: 8 px each. */
+    private static final float MODEL_CENTER_X = 0.5f;
+    private static final float MODEL_CENTER_Z = 0.5f;
+
+    /**
+     * Positions a piece: every second piece (the lower layer, which fills the gaps between the upper ones)
+     * sits SECONDARY_LAYER lower, is shrunk in width and length by SECONDARY_SCALE and turned by SECONDARY_ROTATION; main pieces are turned by ROTATION
+     * and every second one is raised by LAYER, so overlapping pieces never z-fight.
+     */
+    public static void place(Matrix4f pose, BezierConnection bc, int i, int count) {
+        boolean filler = (i & 1) == 0;
+        float y = -SINK;
+        if (!filler) y += SECONDARY_LAYER + ((((i - 1) / 2) & 1) == 1 ? LAYER : 0.0f);
+        pose.translate((Vector3fc) new Vector3f(0.0f, y, zShift(bc, i, count)));
+        float angle = filler ? SECONDARY_ROTATION : ROTATION;
+        float scale = filler ? SECONDARY_SCALE : 1.0f;
+        if (angle != 0.0f || scale != 1.0f) {
+            pose.translate((Vector3fc) new Vector3f(MODEL_CENTER_X, 0.0f, MODEL_CENTER_Z));
+            pose.rotateY(-angle);
+            pose.scale(scale, 1.0f, scale);
+            pose.translate((Vector3fc) new Vector3f(-MODEL_CENTER_X, 0.0f, -MODEL_CENTER_Z));
+        }
+    }
+
+    /**
+     * Pieces 1..count sit on the curve segments. i = 0 and i = count + 1 are extra lower pieces hanging over the
+     * start and the end of the curve; the end one only exists when the last regular piece is not already a lower one.
+     */
+    public static boolean skip(int i, int count) {
+        return count < 1 || (i == count + 1 && (i & 1) != 0);
+    }
+
+    /** Segment whose transform a piece uses; the extra pieces borrow the first and the last one. */
+    public static int src(int i, int count) {
+        return Math.min(Math.max(i, 1), count);
     }
 
     /** Pieces are 1 block long; the last one is pulled back so it ends exactly at the end of the curve. */
     public static float zShift(BezierConnection bc, int i, int count) {
         double length = bc.getLength();
+        double seg = length / count;
+        if (i == 0) return (float) -seg;
+        if (i == count + 1) return (float) (2.0 * seg - 1.0);
         if (length < 1.0) return 0.0f;
         double start = (i - 1) * (length / count);
         return (float) Math.min(0.0, (length - 1.0) - start);
@@ -71,11 +115,12 @@ public final class CurveCasing {
         BezierConnection.SegmentAngles[] segments = bc.getBakedSegments();
         TransformStack.cast(ms).nudge((int) tePosition.method_10063());
         int count = segments.length - 1;
-        for (int i = 1; i < segments.length; i += STEP) {
-            BezierConnection.SegmentAngles segment = segments[i];
+        for (int i = 0; i <= count + 1; i++) {
+            if (skip(i, count)) continue;
+            BezierConnection.SegmentAngles segment = segments[src(i, count)];
             int light = class_761.method_23794((class_1920) level, (class_2338) segment.lightPosition.method_10081((class_2382) tePosition));
             Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
-            pose.translate((Vector3fc) new Vector3f(0.0f, yOffset(i), zShift(bc, i, count)));
+            place(pose, bc, i, count);
             ((SuperByteBuffer) CachedBufferer.partial(model, state).mulPose(pose).mulNormal(segment.tieTransform.method_23762())).light(light).renderInto(ms, vb);
         }
         ms.method_22909();

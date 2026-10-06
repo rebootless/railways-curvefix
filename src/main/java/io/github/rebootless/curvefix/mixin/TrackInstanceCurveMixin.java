@@ -24,8 +24,6 @@ import net.minecraft.class_2382;
 import net.minecraft.class_2482;
 import net.minecraft.class_4587;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -66,10 +64,11 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
             if (casing == null || raw == null) continue;
             BezierConnection.SegmentAngles[] segments = bc.getBakedSegments();
             int count = segments.length - 1;
-            for (int i = 1; i < segments.length; i += CurveCasing.STEP) {
-                BezierConnection.SegmentAngles segment = segments[i];
+            for (int i = 0; i <= count + 1; i++) {
+                if (CurveCasing.skip(i, count)) continue;
+                BezierConnection.SegmentAngles segment = segments[CurveCasing.src(i, count)];
                 Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
-                pose.translate((Vector3fc) new Vector3f(0.0f, CurveCasing.yOffset(i), CurveCasing.zShift(bc, i, count)));
+                CurveCasing.place(pose, bc, i, count);
                 ModelData inst = CasingRenderUtils.makeCasingInstance(raw, casing, mat);
                 inst.setTransform(ms).mulPose(pose).mulNormal(segment.tieTransform.method_23762());
                 class_2338 rel = segment.lightPosition.method_10081((class_2382) this.pos);
