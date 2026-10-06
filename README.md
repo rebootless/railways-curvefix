@@ -8,7 +8,7 @@
 
 Flat curves normally use thin 3px panels for their casing, which makes them look different from straight cased tracks.
 
-**Create: Curve Casing Fix** adds full slab-style casing to flat curved tracks, matching the casing on straight tracks and adding the same rail grooves.
+**Create: Curve Casing Fix** adds full slab-style casing to flat curved tracks.
 
 ---
 
