@@ -1,17 +1,42 @@
-**Create: Curve Casing Fix** fixes the casing used by flat curved tracks from [Create: Steam 'n' Rails](https://modrinth.com/mod/create-steam-n-rails)
+# Create: Curve Casing Fix
 
-Flat curved tracks normally use thin 3px panels for their casing, which makes them visually inconsistent with straight cased tracks. This mod changes the casing of flat curved tracks to use the same slab-style casing as straight tracks, including the corresponding rail grooves.
+**Better-looking curved tram tracks for Create: Steam 'n' Rails.**
 
-### Known Issues
-The current implementation has some visual limitations on sharp curves:
-* **Gaps between segments** may be visible on sharp curves, where adjacent casing segments do not meet perfectly
-* **Texture stretching** can occur at the ends of curved segments, causing the casing texture to appear distorted
+<p align="center"><i>I was really annoyed by how the tracks looked on curves. The original mod didn't fill curved tracks with slabs.</i></p>
 
-These are purely visual issues and are related to how the curved track geometry is generated.
+## 📋 About
 
-> **⚠️ Important**  
-> This is a **client-side visual fix** and does **not** add new blocks, items, or gameplay mechanics.
+Flat curves normally use thin 3px panels for their casing, which makes them look different from straight cased tracks.
 
-**Requires:**
-* [Create](https://modrinth.com/mod/create)
-* [Create: Steam 'n' Rails](https://modrinth.com/mod/create-steam-n-rails)
+**Create: Curve Casing Fix** adds full slab-style casing to flat curved tracks, matching the casing on straight tracks and adding the same rail grooves.
+
+---
+
+### **Before**
+
+![](screenshots/2026-10-06_12.20.57.png)
+
+---
+
+### **After**
+
+![](screenshots/2026-10-06_12.14.05.png)
+
+---
+
+### **Tram track showcase**
+
+![](screenshots/2026-10-06_12.26.50.png)
+
+<p align="center">🚋 <i>Now you can make proper tram tracks!</i></p>
+
+> **⚠️ Known Issues**  
+> Narrow gauge tracks may still look incorrect on curves due to the curved track geometry.
+
+> **ℹ️ Important**  
+> This is a **client-side visual fix** and does not add new blocks, items, or gameplay mechanics.
+
+## 📦 Requires
+
+- [Create](https://modrinth.com/mod/create)
+- [Create: Steam 'n' Rails](https://modrinth.com/mod/create-steam-n-rails)
