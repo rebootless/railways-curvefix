@@ -24,7 +24,7 @@ Flat curves normally use thin 3px panels for their casing, which makes them look
 
 ---
 
-### **Tram track showcase**
+### **Showcase**
 
 ![](screenshots/2026-10-06_12.26.50.png)
 
