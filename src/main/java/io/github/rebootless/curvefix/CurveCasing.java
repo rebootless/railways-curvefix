@@ -36,34 +36,43 @@ public final class CurveCasing {
     public static final float HEIGHT = Float.parseFloat(System.getProperty("curvefix.height", String.valueOf(Tunables.HEIGHT_PX)));
     /** The curve origin sits 15/16 px above the straight-track origin, so pieces are sunk by 15/16 - HEIGHT. */
     private static final float SINK = (0.9375f - HEIGHT) / 16.0f;
-    /** Height (blocks) of the main pieces above the lower, gap-filling pieces, which avoids z-fighting. -Dcurvefix.secondarylayer=f */
+    /** Height offset (blocks) of primary (main) pieces only. -Dcurvefix.primarylayer=f */
+    public static final float PRIMARY_LAYER = Float.parseFloat(System.getProperty("curvefix.primarylayer", String.valueOf(Tunables.PRIMARY_LAYER)));
+    /** Height offset (blocks) of secondary (gap-filling) pieces only. -Dcurvefix.secondarylayer=f */
     public static final float SECONDARY_LAYER = Float.parseFloat(System.getProperty("curvefix.secondarylayer", String.valueOf(Tunables.SECONDARY_LAYER)));
-    /** Extra height (blocks) of every second main piece over its neighbours, which avoids z-fighting between them. -Dcurvefix.layer=f */
-    public static final float LAYER = Float.parseFloat(System.getProperty("curvefix.layer", String.valueOf(Tunables.LAYER)));
+    /** Extra height on every other primary piece (anti-z-fighting among primaries). -Dcurvefix.primaryzfight=f */
+    public static final float PRIMARY_ZFIGHT = Float.parseFloat(System.getProperty("curvefix.primaryzfight", String.valueOf(Tunables.PRIMARY_ZFIGHT)));
+    /** Extra height on every other secondary piece (anti-z-fighting among secondaries). -Dcurvefix.secondaryzfight=f */
+    public static final float SECONDARY_ZFIGHT = Float.parseFloat(System.getProperty("curvefix.secondaryzfight", String.valueOf(Tunables.SECONDARY_ZFIGHT)));
 
     /** Width and length scale of the lower, gap-filling pieces (around the model center); 1 = full size. -Dcurvefix.secondaryscale=f */
     public static final float SECONDARY_SCALE = Float.parseFloat(System.getProperty("curvefix.secondaryscale", String.valueOf(Tunables.SECONDARY_SCALE)));
 
     /** Rotation (degrees) of the lower, gap-filling pieces around the vertical axis through their center; positive = clockwise from above. -Dcurvefix.secondaryrotation=deg */
     public static final float SECONDARY_ROTATION = (float) Math.toRadians(Float.parseFloat(System.getProperty("curvefix.secondaryrotation", String.valueOf(Tunables.SECONDARY_ROTATION_DEG))));
-    /** Rotation (degrees) of the main pieces around the vertical axis through their center; positive = clockwise from above. -Dcurvefix.rotation=deg */
-    public static final float ROTATION = (float) Math.toRadians(Float.parseFloat(System.getProperty("curvefix.rotation", String.valueOf(Tunables.ROTATION_DEG))));
+    /** Rotation (degrees) of the main pieces around the vertical axis through their center; positive = clockwise from above. -Dcurvefix.primaryrotation=deg */
+    public static final float PRIMARY_ROTATION = (float) Math.toRadians(Float.parseFloat(System.getProperty("curvefix.primaryrotation", String.valueOf(Tunables.PRIMARY_ROTATION_DEG))));
 
     /** Center of the straight-track slab model (zo, zo_wide, zo_narrow) in width and length: 8 px each. */
     private static final float MODEL_CENTER_X = 0.5f;
     private static final float MODEL_CENTER_Z = 0.5f;
 
     /**
-     * Positions a piece: every second piece (the lower layer, which fills the gaps between the upper ones)
-     * sits SECONDARY_LAYER lower, is shrunk in width and length by SECONDARY_SCALE and turned by SECONDARY_ROTATION; main pieces are turned by ROTATION
-     * and every second one is raised by LAYER, so overlapping pieces never z-fight.
+     * Positions a piece.
+     * Secondary (even, gap-fillers): SECONDARY_LAYER + SECONDARY_ZFIGHT, SECONDARY_SCALE, SECONDARY_ROTATION.
+     * Primary (odd, main): PRIMARY_LAYER + PRIMARY_ZFIGHT, PRIMARY_ROTATION, full scale.
+     * SECONDARY_* only to secondary; PRIMARY_* only to primary.
+     * ZFIGHT alternates within the same role so neighbouring pieces of one role never share the same Y.
      */
     public static void place(Matrix4f pose, BezierConnection bc, int i, int count) {
-        boolean filler = (i & 1) == 0;
-        float y = -SINK;
-        if (!filler) y += SECONDARY_LAYER + ((((i - 1) / 2) & 1) == 1 ? LAYER : 0.0f);
+        boolean filler = secondary(i);
+        float y = -SINK + (filler ? SECONDARY_LAYER : PRIMARY_LAYER);
+        // every other piece of the same role gets the z-fight offset
+        if (((i / 2) & 1) == 1) {
+            y += filler ? SECONDARY_ZFIGHT : PRIMARY_ZFIGHT;
+        }
         pose.translate((Vector3fc) new Vector3f(0.0f, y, zShift(bc, i, count)));
-        float angle = filler ? SECONDARY_ROTATION : ROTATION;
+        float angle = filler ? SECONDARY_ROTATION : PRIMARY_ROTATION;
         float scale = filler ? SECONDARY_SCALE : 1.0f;
         if (angle != 0.0f || scale != 1.0f) {
             pose.translate((Vector3fc) new Vector3f(MODEL_CENTER_X, 0.0f, MODEL_CENTER_Z));
@@ -71,6 +80,11 @@ public final class CurveCasing {
             pose.scale(scale, 1.0f, scale);
             pose.translate((Vector3fc) new Vector3f(-MODEL_CENTER_X, 0.0f, -MODEL_CENTER_Z));
         }
+    }
+
+    /** Secondary pieces are the lower, gap-filling ones (even indices); the rest are primary. */
+    public static boolean secondary(int i) {
+        return (i & 1) == 0;
     }
 
     /**
@@ -115,12 +129,15 @@ public final class CurveCasing {
         BezierConnection.SegmentAngles[] segments = bc.getBakedSegments();
         TransformStack.cast(ms).nudge((int) tePosition.method_10063());
         int count = segments.length - 1;
+        boolean debug = CurveDebug.active();
+        if (debug) CurveDebug.reset(bc);
         for (int i = 0; i <= count + 1; i++) {
             if (skip(i, count)) continue;
             BezierConnection.SegmentAngles segment = segments[src(i, count)];
             int light = class_761.method_23794((class_1920) level, (class_2338) segment.lightPosition.method_10081((class_2382) tePosition));
             Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
             place(pose, bc, i, count);
+            if (debug) CurveDebug.add(bc, tePosition, pose, i);
             ((SuperByteBuffer) CachedBufferer.partial(model, state).mulPose(pose).mulNormal(segment.tieTransform.method_23762())).light(light).renderInto(ms, vb);
         }
         ms.method_22909();

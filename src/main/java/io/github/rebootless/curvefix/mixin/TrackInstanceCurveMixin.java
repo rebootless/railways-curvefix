@@ -14,6 +14,7 @@ import com.simibubi.create.content.trains.track.BezierConnection;
 import com.simibubi.create.content.trains.track.TrackBlockEntity;
 import com.simibubi.create.content.trains.track.TrackInstance;
 import io.github.rebootless.curvefix.CurveCasing;
+import io.github.rebootless.curvefix.CurveDebug;
 import io.github.rebootless.curvefix.CurveRules;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,7 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
                 BezierConnection.SegmentAngles segment = segments[CurveCasing.src(i, count)];
                 Matrix4f pose = MathUtils.copy(segment.tieTransform.method_23761());
                 CurveCasing.place(pose, bc, i, count);
+                CurveDebug.add(this, this.pos, pose, i);
                 ModelData inst = CasingRenderUtils.makeCasingInstance(raw, casing, mat);
                 inst.setTransform(ms).mulPose(pose).mulNormal(segment.tieTransform.method_23762());
                 class_2338 rel = segment.lightPosition.method_10081((class_2382) this.pos);
@@ -96,5 +98,6 @@ public abstract class TrackInstanceCurveMixin extends BlockEntityInstance<TrackB
         for (ModelData m : this.curvefix$models) m.delete();
         this.curvefix$models.clear();
         this.curvefix$lightPos.clear();
+        CurveDebug.forget(this);
     }
 }

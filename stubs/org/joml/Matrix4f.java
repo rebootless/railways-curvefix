@@ -1,1 +1,1 @@
-package org.joml; public class Matrix4f { public Matrix4f translate(Vector3fc v){return this;} public Matrix4f scale(float x,float y,float z){return this;} public Matrix4f rotateY(float ang){return this;} }
+package org.joml; public class Matrix4f { public Matrix4f translate(Vector3fc v){return this;} public Matrix4f scale(float x,float y,float z){return this;} public Matrix4f rotateY(float ang){return this;} public Vector3f transformPosition(Vector3f v){return v;} }

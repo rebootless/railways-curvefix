@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Builds the addon jar. Needs JDK 17+ and the mod jars in libs/.
+
 # create-fabric-0_5_1-j-build_1631_mc1_20_1.jar
 # Steam_Rails-1_6_9_fabric-mc1_20_1.jar
 # fabric-api-0.92.7+1.20.1.jar
@@ -12,24 +13,34 @@ cd "$(dirname "$0")"
 
 # Mod parameters (baked into the JAR).
 
-# top height in px above straight casing or slab (0 = flush, higher = higher)
-HEIGHT="${HEIGHT:-0.003}"
+# top height in px above straight casing or slab (0 = flush, positive = higher, negative = lower)
+HEIGHT="${HEIGHT:-0}"
 
-# height offset of the main pieces above the lower (gap-filling) pieces, in blocks (anti-z-fighting)
-SECONDARY_LAYER="${SECONDARY_LAYER:-0.005}"
-# extra height offset between consecutive main pieces, in blocks (anti-z-fighting)
-LAYER="${LAYER:-0.0025}"
+# height offset of primary (main) pieces only, in blocks (positive = higher, negative = lower)
+PRIMARY_LAYER="${PRIMARY_LAYER:-0.002}"
+# height offset of secondary (gap-filling) pieces only, in blocks (positive = higher, negative = lower)
+SECONDARY_LAYER="${SECONDARY_LAYER:--0.002}"
 
-# width and length scale of the lower (gap-filling) pieces around their center; 1 = full size, 0.95 = slightly smaller
-SECONDARY_SCALE="${SECONDARY_SCALE:-0.99}"
+# extra height on every other primary piece (anti-z-fighting among primaries)
+PRIMARY_ZFIGHT="${PRIMARY_ZFIGHT:-0.001}"
+# extra height on every other secondary piece (anti-z-fighting among secondaries)
+SECONDARY_ZFIGHT="${SECONDARY_ZFIGHT:--0.001}"
 
-# rotation of the lower (gap-filling) pieces around the vertical axis through their center, in degrees (decimals ok, positive = clockwise from above)
+# width/length scale of secondary pieces around their center (1 = full size)
+SECONDARY_SCALE="${SECONDARY_SCALE:-0.98}"
+
+# rotation of primary pieces around vertical axis through center, degrees (positive = clockwise from above)
+PRIMARY_ROTATION="${PRIMARY_ROTATION:-0.8}"
+# rotation of secondary pieces around vertical axis through center, degrees (positive = clockwise from above)
 SECONDARY_ROTATION="${SECONDARY_ROTATION:-0.9}"
-# rotation of the main pieces around the vertical axis through their center, in degrees (decimals ok, positive = clockwise from above)
-ROTATION="${ROTATION:-0.8}"
+
+# F3 debug outline color of primary pieces, hex RRGGBB
+PRIMARY_COLOR="${PRIMARY_COLOR:-55FF55}" # Green
+# F3 debug outline color of secondary pieces, hex RRGGBB
+SECONDARY_COLOR="${SECONDARY_COLOR:-FF55FF}" # Pink
 
 # mod version; empty = use fabric.mod.json (VERSION= ./build.sh)
-VERSION="${VERSION-1.1.0}"
+VERSION="${VERSION-1.2.0}"
 
 # Accepts decimals (also with a comma); fails early on anything that is not a number.
 num() {
@@ -37,8 +48,13 @@ num() {
     [[ "$v" =~ ^-?([0-9]+\.?[0-9]*|\.[0-9]+)$ ]] || { echo "$2 must be a number, got '$1'" >&2; exit 1; }
     printf '%s' "$v"
 }
-for name in HEIGHT SECONDARY_LAYER LAYER SECONDARY_SCALE SECONDARY_ROTATION ROTATION; do
+for name in HEIGHT PRIMARY_LAYER SECONDARY_LAYER PRIMARY_ZFIGHT SECONDARY_ZFIGHT SECONDARY_SCALE PRIMARY_ROTATION SECONDARY_ROTATION; do
     value=$(num "${!name}" "$name") || exit 1
+    printf -v "$name" '%s' "$value"
+done
+for name in PRIMARY_COLOR SECONDARY_COLOR; do
+    value="${!name#\#}"
+    [[ "$value" =~ ^[0-9a-fA-F]{6}$ ]] || { echo "$name must be a hex color RRGGBB, got '${!name}'" >&2; exit 1; }
     printf -v "$name" '%s' "$value"
 done
 
@@ -69,11 +85,15 @@ package io.github.rebootless.curvefix;
 final class Tunables {
     private Tunables() {}
     static final float HEIGHT_PX = ${HEIGHT}f;
-    static final float SECONDARY_SCALE = ${SECONDARY_SCALE}f;
-    static final float SECONDARY_ROTATION_DEG = ${SECONDARY_ROTATION}f;
-    static final float ROTATION_DEG = ${ROTATION}f;
+    static final float PRIMARY_LAYER = ${PRIMARY_LAYER}f;
     static final float SECONDARY_LAYER = ${SECONDARY_LAYER}f;
-    static final float LAYER = ${LAYER}f;
+    static final float PRIMARY_ZFIGHT = ${PRIMARY_ZFIGHT}f;
+    static final float SECONDARY_ZFIGHT = ${SECONDARY_ZFIGHT}f;
+    static final float SECONDARY_SCALE = ${SECONDARY_SCALE}f;
+    static final float PRIMARY_ROTATION_DEG = ${PRIMARY_ROTATION}f;
+    static final float SECONDARY_ROTATION_DEG = ${SECONDARY_ROTATION}f;
+    static final int PRIMARY_COLOR = 0x${PRIMARY_COLOR};
+    static final int SECONDARY_COLOR = 0x${SECONDARY_COLOR};
 }
 EOF
 
