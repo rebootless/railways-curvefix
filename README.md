@@ -10,32 +10,31 @@ Flat curves normally use thin 3px panels for their casing, which makes them look
 
 **Create: Curve Casing Fix** adds full slab-style casing to flat curved tracks.
 
----
-<div align="center">
+<table>
+  <tr>
+    <th>Before</th>
+    <th>After</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="screenshots/2026-10-06_12.20.57.png" alt="Before">
+    </td>
+    <td>
+      <img src="screenshots/2026-10-06_12.14.05.png" alt="After">
+    </td>
+  </tr>
+</table>
 
-### **Before**
-
-![](screenshots/2026-10-06_12.20.57.png)
-
-</div>
-
----
-<div align="center">
-
-### **After**
-
-![](screenshots/2026-10-06_12.14.05.png)
-
-</div>
-
----
-<div align="center">
-
-### **Showcase**
-
-![](screenshots/2026-10-06_12.26.50.png)
-
-</div>
+<table>
+  <tr>
+    <th>Showcase</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="screenshots/2026-10-06_12.26.50.png" alt="Showcase">
+    </td>
+  </tr>
+</table>
 
 <p align="center">🚋 <i>Now you can make proper tram tracks!</i></p>
 
