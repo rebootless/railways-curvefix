@@ -64,7 +64,7 @@ FA=$(find libs -maxdepth 1 -name 'fabric-api*.jar' -print -quit)
 FL=$(find libs -maxdepth 1 -name 'fabric-loader*.jar' -print -quit)
 
 if [ -z "$SR" ] || [ -z "$CR" ] || [ -z "$FA" ] || [ -z "$FL" ]; then
-    echo "put Steam_Rails-*.jar, create-fabric-*.jar, fabric-api*.jar and fabric-loader*.jar into libs/" >&2
+    echo "put Steam_Rails*.jar, create-fabric*.jar, fabric-api*.jar and fabric-loader*.jar into libs/" >&2
     exit 1
 fi
 
